@@ -10,3 +10,16 @@ __pycache__/
 *.mp4
 *.mov
 *.webm
+.venv/
+downloads/
+thumbnails/
+debug_reels.html
+debug_reels.png
+__pycache__/
+*.pyc
+*.mp4
+*.mov
+*.webm
+token.json
+client_secrets.json
+.env
