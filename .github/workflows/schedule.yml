@@ -13,7 +13,7 @@ on:
       profile:
         description: 'Instagram Profile'
         required: false
-        default: 'cyberuniverse.exe'
+        default: 'aest_loves'
       upload_limit:
         description: 'Max Reels to Upload'
         required: false
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      INSTAGRAM_PROFILE: ${{ inputs.profile || 'cyberuniverse.exe' }}
+      INSTAGRAM_PROFILE: ${{ inputs.profile || 'aest_loves' }}
       UPLOAD_LIMIT: ${{ inputs.upload_limit || 1 }}
       IG_COOKIES_JSON: ${{ secrets.IG_COOKIES_JSON }}
       YT_TOKEN_JSON_B64: ${{ secrets.YT_TOKEN_JSON_B64 }}

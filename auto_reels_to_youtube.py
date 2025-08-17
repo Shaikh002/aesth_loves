@@ -34,12 +34,21 @@ FFPROBE = "ffprobe"
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+# --- FIXED HASHTAGS (forced into description every time) ---
+FIXED_HASHTAGS = os.getenv("FIXED_HASHTAGS",
+    "#happy #quoteoftheday #smile #bollywoodsongs #reelstofeel #aesthetic "
+    "#explore #bestedits #reelsquotes #reelsinstagram #aestheticpostforyou "
+    "#reelsaesthetic #recoverysayings #aesthetic #lofiandchill"
+).strip()
 client = OpenAI()
 
 _STOPWORDS = {"the", "and", "for", "with", "this", "that", "from", "your", "you", "are", "about", "have", "has", "not", "but", "just", "what", "when", "where", "who", "why", "how", "its", "it's", "can", "will", "get", "like", "new"}
-HACKING_TAGS = ["#ethicalhacking", "#cybersecurity", "#bugbounty", "#infosec", "#penetrationtesting", "#redteam", "#vulnerability", "#securityresearch", "#threatintel", "#whitehat", "#hackerlife", "#securitytips", "#hackingtools"]
-TRENDING_TAGS = ["#viral", "#trending", "#Shorts", "#foryou", "#explore", "#tech", "#contentcreator", "#daily", "#automation", "#viralshorts"]
-
+HACKING_TAGS = [
+    "#romantic", "#love", "#lovestory", "#couplegoals", "#romanticsong",
+    "#hindisong", "#punjabisong", "#lofi", "#shayari", "#status",
+    "#oldsongs", "#feelings", "#dilse", "#bollywood", "#sad"
+]
+TRENDING_TAGS = ["#Shorts", "#trending", "#reels", "#viral", "#foryou", "#explore"]
 def send_telegram(msg):
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
         try:
@@ -50,13 +59,15 @@ def send_telegram(msg):
             print(f"⚠️ Telegram error: {e}")
 
 def determine_category_id(caption: str) -> str:
-    caption_lower = caption.lower()
-    if any(kw in caption_lower for kw in ["hack", "wifi", "nmap", "bug", "exploit", "payload", "malware", "phishing", "ethical", "osint"]):
-        return "26"  # How-to & Style
-    if any(kw in caption_lower for kw in ["tutorial", "learn", "how to", "guide", "class", "course", "lesson"]):
-        return "27"  # Education
-    if any(kw in caption_lower for kw in ["review", "setup", "tech", "gadget", "automation", "linux", "ai", "tools", "app", "code", "script"]):
-        return "28"  # Science & Tech
+    """
+    10 = Music, 24 = Entertainment, 22 = People & Blogs
+    """
+    c = caption.lower()
+    if any(k in c for k in ["song","music","singer","lyrics","lofi","bgm","cover","remix"]):
+        return "10"  # Music
+    if any(k in c for k in ["love","romantic","couple","shayari","status","relationship"]):
+        return "24"  # Entertainment
+        
     return "22"  # Default
 
 def load_processed():
@@ -116,8 +127,9 @@ def quality_label(w: int, h: int) -> str:
     return "FULL HD" if min(w, h) >= 1080 else "SD"
 # --- Robust Google Trends with retry + fallback ---
 CACHED_TRENDS = [
-    "AI tools", "Cybersecurity", "Ethical hacking", "Bug bounty",
-    "Linux commands", "Automation tools", "Python", "Nmap", "Kali Linux", "Malware analysis"
+    "Arijit Singh", "Lofi Hindi", "Bollywood romantic", "Romantic status",
+    "Punjabi love song", "Old is gold", "90s love songs", "Shayari",
+    "Love quotes", "Hindi love story"
 ]
 
 def _fetch_trends_india_raw(max_items=10, retries=3):
@@ -143,7 +155,8 @@ def get_trending_keywords_india(limit=5):
     Return up to `limit` *relevant* trend keywords for hashtagging.
     Filters to your niche; falls back to cached topics when Trends fails.
     """
-    niche_needles = ("tech", "hack", "cyber", "ai", "app", "gadget", "phone", "security", "linux", "tools")
+    niche_needles = ("love","romance","romantic","song","songs","lofi","shayari",
+                 "bollywood","punjabi","hindi","couple","heart","dil","status","breakup","sad")
     raw = _fetch_trends_india_raw(max_items=20, retries=3)
     if raw:
         filtered = [kw for kw in raw if any(n in kw.lower() for n in niche_needles)]
@@ -229,36 +242,8 @@ def fallback_title_from_caption(caption: str) -> str:
     return final_title
 
 def generate_ai_title(caption: str) -> str:
-    trends = get_live_trends(count=3)
-    trends_text = ", ".join(trends) if trends else ""
-    prompt = (
-        f"Generate a catchy YouTube Shorts title (max 70 characters) for a hacking-themed reel with this caption:\n\n"
-        f"{caption}\n\n"
-        f"Include at least one of these trending Indian keywords if possible: {trends_text}\n"
-        f"Avoid clickbait, keep it smart and tech-focused."
-    )
+    return "tag your love 💗 #shorts"
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=50,
-            temperature=0.8
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        send_telegram(f"⚠️ GPT-4 failed → gpt-3.5 fallback\nReason: {e}")
-        try:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=50,
-                temperature=0.8
-            )
-            return response.choices[0].message.content.strip()
-        except Exception as ex:
-            send_telegram(f"❌ AI title unavailable → Using caption+trends\nReason: {ex}")
-            return fallback_title_from_caption(caption)
 
 def get_youtube_client():
     creds = None
@@ -287,7 +272,8 @@ def get_youtube_client():
             print("✅ New token saved to", TOKEN_FILE)
     return build("youtube", "v3", credentials=creds)
 
-def comment_and_pin(youtube, video_id, comment_text="🔥 Follow for more hacking tips!"):
+def comment_and_pin(youtube, video_id, comment_text="❤️ Daily romantic reels & love songs. Follow for more!"):
+
     try:
         comment_response = youtube.commentThreads().insert(
             part="snippet",
@@ -337,28 +323,24 @@ def upload_to_youtube(video_path, caption, ig_tags):
         send_telegram(f"❌ AI title generation failed, using fallback.\n{e}")
         title = fallback_title_from_caption(caption)
 
-    # --- Build final hashtags ---
-    trend_keywords = get_trending_keywords_india(limit=3)
-    trend_tags = [f"#{t.replace(' ', '')}" for t in trend_keywords]
-
-    raw_tags = ig_tags + HACKING_TAGS[:3] + TRENDING_TAGS[:3] + trend_tags
-    final_tags = ensure_exact_hashtags(raw_tags, desired=8)
+    # --- FORCED HASHTAGS (visible in description) ---
+    final_hashtags = re.findall(r"#\w+", FIXED_HASHTAGS)
 
     description = f"""{caption}
 
-🎯 Learn hacking tools, tech tricks, automation, and ethical cybersecurity tips.
-🚀 Follow for daily tutorials and #shorts content that educates and entertains!
-   Comment your favorite tool below!
+❤️ Romantic reels, Hindi/Punjabi love songs, lofi & shayari vibes.
+🎧 Daily uploads. Comment your favorite song!
 
-    {' '.join(final_tags)}
+    {' '.join(final_hashtags)}
 """
     thumb_path = generate_thumbnail(title, THUMBNAIL_DIR / "thumb.jpg")
 
+    # Use clean (no '#') tags for YouTube metadata
     body = {
         "snippet": {
             "title": title,
             "description": description,
-            "tags": final_tags,
+            "tags": [t.lstrip("#") for t in final_hashtags],
             "categoryId": determine_category_id(caption)
         },
         "status": {"privacyStatus": "public"}
@@ -380,6 +362,7 @@ def upload_to_youtube(video_path, caption, ig_tags):
         return False
 
 
+
 def filter_relevant_hashtags(caption, allowed_keywords, max_count=3):
     """Extracts up to `max_count` hashtags from caption that match allowed_keywords."""
     hashtags = re.findall(r"#\w+", caption)
@@ -399,7 +382,11 @@ def download_reel(url, idx=None, total=None):
             full_caption = full_caption.strip()
 
             # --- Extract only relevant hashtags ---
-            niche_keywords = ["hack", "hacking", "cyber", "security", "bug", "tech", "ai", "automation", "linux", "tools"]
+            niche_keywords = [
+    "love","romance","romantic","couple","shayari","song","songs",
+    "lofi","bollywood","punjabi","hindi","status","dil","heart","breakup","sad"
+]
+
             filtered_tags = filter_relevant_hashtags(full_caption, niche_keywords, max_count=3)
 
             # --- Remove hashtags & @mentions from the clean caption for description/title ---

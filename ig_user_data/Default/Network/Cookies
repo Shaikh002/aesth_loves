@@ -1,0 +1,46 @@
+[
+  {
+    "name": "sessionid",
+    "value": "67529536469%3AzBuMmGdR7bjGsE%3A16%3AAYfiLzoJJg__T3Oo74x1q2w998WIwla-jjMvqp5HpQ",
+    "domain": ".instagram.com",
+    "path": "/",
+    "httpOnly": true,
+    "secure": true
+  },
+  {
+    "name": "ds_user_id",
+    "value": "67529536469",
+    "domain": ".instagram.com",
+    "path": "/",
+    "secure": true
+  },
+  {
+    "name": "csrftoken",
+    "value": "miWHTODiaVNXelrwF1j2pi",
+    "domain": ".instagram.com",
+    "path": "/",
+    "secure": true
+  },
+  {
+    "name": "ig_did",
+    "value": "075BECAC-8AEE-40B0-8BA3-BE649EDFD20C",
+    "domain": ".instagram.com",
+    "path": "/",
+    "secure": true
+  },
+  {
+    "name": "mid",
+    "value": "aJPY4gALAAGe7vAZ1XzNqlSGfQB7",
+    "domain": ".instagram.com",
+    "path": "/",
+    "secure": true
+  },
+  {
+    "name": "rur",
+    "value": "\"CLN\\05467529536469\\0541786055798:01fedfe1873eb7689627b8757769a5dd3448ebdb0198c6321fecd82c6ccf0db99c4392e6\"",
+    "domain": ".instagram.com",
+    "path": "/",
+    "secure": true,
+    "httpOnly": true
+  }
+]
